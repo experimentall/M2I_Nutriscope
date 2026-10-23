@@ -1,0 +1,34 @@
+services:
+
+  python:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    container_name: python_app
+    tty: true          # Alloue un pseudo-TTY (indispensable)
+    stdin_open: true    # Maintient l'entrée standard ouverte
+    depends_on:
+      pgsql:
+        condition: service_healthy # Attend que PostgreSQL soit prêt
+    volumes:
+      - ./:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  pgsql:
+    image: postgres:16-alpine
+    container_name: python_pgsql
+    restart: always
+    environment:
+      POSTGRES_USER: nutriscope_app
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: nutriscope
+    ports:
+      - 5432:5432
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nutriscope_app -d nutriscope"]
+      interval: 3s
+      timeout: 3s
+      retries: 5

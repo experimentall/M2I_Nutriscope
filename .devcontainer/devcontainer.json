@@ -1,0 +1,14 @@
+{
+  "name": "Python Docker Project",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "python",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-toolsai.jupyter",
+        "ms-python.python"
+      ]
+    }
+  }
+}
