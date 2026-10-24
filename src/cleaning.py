@@ -168,7 +168,7 @@ def normaliser_textes(df: pd.DataFrame) -> tuple[pd.DataFrame, CompteRendu]:
             
             resultat["brands"] = marques_harmonisees
             resultat.loc[~mask_marque_valide, "brands"] = np.nan
-            resultat.drop(columns=["_brands_lower"], inplace=True)
+            resultat = resultat.drop(columns=["_brands_lower"])
         else:
             resultat.loc[~mask_marque_valide, "brands"] = np.nan
 

@@ -1,8 +1,8 @@
 # Custom rules
 wip/
-data/
-models/
-pgdata/
+/data/
+/models/
+/pgdata/
 
 
 # Byte-compiled / optimized / DLL files
