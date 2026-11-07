@@ -1,0 +1,13 @@
+## Ce que le modèle rate (Analyse simple des erreurs)
+
+En regardant de près la planche des erreurs, on s'aperçoit que l'IA se fait très facilement piéger par les **couleurs et le look des emballages**. Même si notre modèle (MobileNetV2) est très fort pour reconnaître des formes, il ne comprend pas le sens des mots écrits sur les paquets. Par exemple, si une boîte de barres de céréales utilise exactement le même fond jaune vif et des dessins de carrés de chocolat qu'un paquet de gâteaux, l'IA va foncer tête baissée et classer la boîte dans le rayon "biscuits". Elle choisit la facilité en se basant sur les couleurs dominantes plutôt que d'analyser la vraie forme ou la texture de l'article.
+
+Le deuxième gros problème vient de la **qualité des photos prises dans la vraie vie**. Le modèle a été entraîné avec des images plutôt propres, nettes et bien centrées. Dès qu'on lui donne une photo un peu floue (à cause d'un mouvement), une image trop sombre, ou une photo où l'on voit le décor du magasin (un bout de rayon, le code-barres d'à côté, ou même les doigts de l'utilisateur), l'IA perd complètement le fil. Dans ce cas, soit sa confiance chute en dessous de notre seuil de 35 % (elle répond "Je ne sais pas"), soit elle donne une mauvaise réponse au hasard parce qu'elle est perturbée par les éléments parasites autour du produit.
+
+## 2 pistes simples pour améliorer le modèle
+
+* **Ajouter un zoom automatique sur le produit (Cadrage propre) :**
+  Puisque le modèle est perturbé par le décor autour des paquets, la première solution est d'installer un petit outil de détection d'objet juste avant notre réseau de neurones. Cet outil servira à repérer le paquet dans la photo et à le "rogner" proprement (un peu comme un recadrage automatique sur votre téléphone). De cette façon, le modèle de classification recevra uniquement l'image du produit bien centrée, sans les doigts de l'utilisateur ni les autres produits autour. Cela évitera la majorité des erreurs de contexte.
+
+* **Forcer l'IA à travailler sur ses points faibles (Hard Negative Mining et Flou) :**
+  La planche des erreurs nous montre exactement quelles classes l'IA confond le plus souvent (par exemple, les *biscuits* avec les *céréales*). Pour corriger cela, il faut aller chercher de nouvelles images de ces produits spécifiques qui posent problème et les ajouter au dataset d'entraînement pour "donner des cours de rattrapage" à l'IA. En plus, dans notre code de `data_augmentation`, nous devrions ajouter des effets de flou artificiel et des changements de lumière. En habituant l'IA à s'entraîner sur des images de mauvaise qualité, elle deviendra beaucoup plus robuste face aux photos ratées des utilisateurs.
