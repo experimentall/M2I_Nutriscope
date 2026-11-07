@@ -201,18 +201,49 @@ Sur les 111 colonnes du schéma Parquet source, nous ne conserverons que les col
 
 ---
 
-## 5. Rayons et catégories retenus (5 à 8 catégories cibles)
+# Les 5 catégories majeures du catalogue NutriScope
 
-Pour garantir la pertinence du moteur de recommandation nutritionnelle et éviter les suggestions aberrantes, le catalogue NutriScope est restreint à **6 rayons du quotidien** présentant une complétude nutritionnelle supérieure à 80 % :
+## 1. Sugary snacks (293 564 produits)
+* **Justification :** C'est la catégorie la plus volumineuse de votre catalogue. Elle regroupe tous les produits de l'univers sucré plaisir (biscuits, chocolats, confiseries). Nutritionnellement, elle se caractérise par une saturation en sucres rapides et en calories, concentrant une immense majorité de Nutri-Score D et E. Elle est indispensable pour proposer des alternatives plus saines dans l'univers du goûter et des desserts.
 
-| # | Rayon cible | Tag Open Food Facts | Volumétrie France | Complétude Nutri-Score (%) | Justification métier & IA |
-|---|---|---|---|---|---|
-| 1 | **Biscuits et gâteaux** | `en:biscuits-and-cakes` | 39 849 | **90,2 %** | Forte dispersion de notes, cas idéal pour la substitution sucrée. |
-| 2 | **Plats préparés** | `en:meals` | 45 666 | **89,2 %** | Forte disparité en sel et graisses saturées. |
-| 3 | **Charcuterie & viandes préparées** | `en:prepared-meats` | 37 946 | **88,3 %** | Le sel et les nitrites. |
-| 4 | **Snacks sucrés** | `en:sweet-snacks` | 90 947 | **85,7 %** | Sucre. |
-| 5 | **Céréales et dérivés** | `en:cereals-and-potatoes` | 50 203 | **84,9 %** | Produits du petit-déjeuner et féculents. |
-| 6 | **Produits laitiers** | `en:dairies` | 59 861 | **83,9 %** | Yaourts, desserts lactés, fromages. |
+## 2. Fish Meat Eggs (195 033 produits)
+* **Justification :** Cette catégorie représente le pilier d'apport en protéines animales (et alternatives) du catalogue. Son profil nutritionnel est unique et orthogonal aux autres : un taux de protéines très élevé, une quantité variable de lipides, mais une absence quasi-totale de glucides et de fibres. Elle permet de structurer le pôle "matières premières et composants de repas".
+
+## 3. Cereals and potatoes (184 408 produits)
+* **Justification :** Ce groupe constitue la base énergétique salée du catalogue (pâtes, riz, pain, pommes de terre). Sa matrice nutritionnelle est dominée par les glucides complexes (amidon) et les fibres (pour les versions complètes). C'est une catégorie clé pour le moteur de substitution, car les écarts de Nutri-Score y sont fréquents selon le degré de raffinage et l'ajout de sel.
+
+## 4. Milk and dairy products (176 355 produits)
+* **Justification :** Les produits laitiers possèdent une matrice unique (apport en calcium, fermentation, protéines laitières et acides gras saturés spécifiques). Commercialement et nutritionnellement, ils forment un univers à part entière qui traverse tout le spectre du Nutri-Score (du lait écrémé A aux fromages gras E), offrant un terrain idéal pour des substitutions intra-rayon pertinentes.
+
+## 5. Beverages (150 856 produits)
+* **Justification :** Les boissons (sans alcool) doivent impérativement former une catégorie isolée. Pourquoi ? Parce que le mode de calcul du Nutri-Score pour les boissons est structurellement différent de celui des aliments solides (les seuils de points pour les calories et les sucres y sont beaucoup plus sévères). Les mélanger avec des solides fausserait complètement les distances et les centroïdes du K-Means.
+
+---
+
+# Justification des catégories écartées du modèle principal
+
+Dans le cadre de la réduction à 5 catégories majeures pour le catalogue NutriScope, voici l'analyse ayant conduit à écarter les 4 autres groupes du périmètre principal :
+
+* **Salty snacks :** Ce groupe peut être rattaché logiquement à l'univers d'impulsion/plaisir des *Sugary snacks* (partageant un mode de consommation similaire hors repas) ou traité directement via les féculents pour ses aspects salés et apéritifs (biscuits salés, tuiles).
+* **Composite foods :** Les plats préparés (pizzas, sandwichs, lasagnes) constituent des matrices complexes. Leurs profils nutritionnels se superposent très souvent à ceux de la catégorie *Cereals and potatoes*, qui leur sert systématiquement de base structurelle et glucidique rigide.
+* **Fat and sauces :** Bien que volumineuse, cette famille affiche un profil nutritionnel extrême (proche de 100 % de lipides). Elle agit comme un véritable *outlier* computationnel (valeur aberrante pour les distances euclidiennes) qui risquerait de déformer les centroïdes dans un modèle restreint à seulement 5 groupes.
+* **Fruits and vegetables :** C'est le groupe le plus petit de la liste de départ (environ 100 000 produits). De plus, les fruits et légumes bruts ou surgelés obtiennent presque tous nativement la note A au Nutri-Score, ce qui limite fortement l'intérêt pratique d'un moteur de substitution (on ne remplace pas une pomme par une autre pomme).
+
+---
+
+### Catégories représentative (pnns_groups_1):
+Sugary snacks : 293564  
+Fish Meat Eggs : 195033  
+Cereals and potatoes : 184408  
+Milk and dairy products : 176355  
+Beverages : 150856  
+**Exclus:**  
+Fat and sauces : 125905  
+Composite foods : 104101  
+Fruits and vegetables : 100741  
+Salty snacks : 75497  
+Alcoholic beverages : 37559  
+Baby foods : 4697
 
 ---
 

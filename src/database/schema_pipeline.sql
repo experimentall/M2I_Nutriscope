@@ -49,6 +49,7 @@ CREATE TABLE product (
     quantity TEXT NULL,
     brands TEXT NULL,
     categories_tags TEXT NULL,
+    labels_tags TEXT NULL,
     ingredients_text TEXT NULL,
     allergens TEXT NULL,
     serving_size TEXT NULL,

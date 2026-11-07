@@ -4,63 +4,49 @@
 
 | rayon | nb_produits | part_pourcentage |
 | --- | --- | --- |
-| milk-and-dairy-products | 56237 | 10.49 |
-| fish-meat-eggs | 82171 | 15.33 |
-| sugary-snacks | 101934 | 19.01 |
-| composite-foods | 38239 | 7.13 |
-| cereals-and-potatoes | 51303 | 9.57 |
-| salty-snacks | 28582 | 5.33 |
-| unknown | 54996 | 10.26 |
-| fat-and-sauces | 35688 | 6.66 |
-| baby-foods | 2526 | 0.47 |
-| beverages | 42678 | 7.96 |
-| fruits-and-vegetables | 33504 | 6.25 |
-| alcoholic-beverages | 8330 | 1.55 |
+| fish-meat-eggs | 82171 | 24.58 |
+| milk-and-dairy-products | 56237 | 16.82 |
+| sugary-snacks | 101934 | 30.49 |
+| cereals-and-potatoes | 51303 | 15.35 |
+| beverages | 42678 | 12.77 |
 
 ## completude
 
 | rayon | pct_nutriscore | pct_7_nutriments | pct_categories |
 | --- | --- | --- | --- |
-| milk-and-dairy-products | 94.45 | 95.02 | 100.0 |
 | fish-meat-eggs | 94.38 | 94.67 | 100.0 |
-| beverages | 75.89 | 84.84 | 100.0 |
 | sugary-snacks | 89.97 | 92.24 | 100.0 |
 | cereals-and-potatoes | 89.64 | 92.95 | 100.0 |
-| composite-foods | 94.78 | 96.49 | 100.0 |
-| salty-snacks | 94.83 | 95.33 | 100.0 |
-| fruits-and-vegetables | 86.88 | 88.4 | 100.0 |
-| alcoholic-beverages | 0.58 | 23.71 | 100.0 |
-| unknown | 68.43 | 87.04 | 100.0 |
-| fat-and-sauces | 87.27 | 93.26 | 100.0 |
-| baby-foods | 0.0 | 91.88 | 100.0 |
+| milk-and-dairy-products | 94.45 | 95.02 | 100.0 |
+| beverages | 75.89 | 84.84 | 100.0 |
 
 ## doublons
 
 | indicateur | valeur |
 | --- | --- |
 | codes_en_double | 0 |
-| couples_nom_marque_repetes | 34088 |
+| couples_nom_marque_repetes | 21264 |
 
 ## bornes_et_coherences
 
 | anomalie | nb_lignes |
 | --- | --- |
 | nutriment_hors_0_100 | 0 |
-| energie_hors_0_900 | 17 |
-| sucres_superieur_glucides | 256 |
-| satures_superieur_lipides | 304 |
-| sel_different_sodium_x2_5 | 952 |
-| energie_nulle_avec_macronutriments | 2 |
+| energie_hors_0_900 | 12 |
+| sucres_superieur_glucides | 184 |
+| satures_superieur_lipides | 158 |
+| sel_different_sodium_x2_5 | 607 |
+| energie_nulle_avec_macronutriments | 0 |
 
 ## distribution_nutriscore
 
 | grade | nb_produits | part_pourcentage | score_moyen_energie |
 | --- | --- | --- | --- |
-| b | 49497 | 9.23 | 232.35677906493748 |
-| not-applicable | 26364 | 4.92 | 203.68599333671375 |
-| d | 121920 | 22.74 | 291.53635272490413 |
-| a | 62825 | 11.72 | 172.70869878505562 |
-| unknown | 47787 | 8.91 | 257.4008806542544 |
-| c | 95912 | 17.89 | 192.00368891264586 |
-| e | 131883 | 24.6 | 389.01518107884203 |
+| b | 28189 | 8.43 | 150.0759934064187 |
+| d | 84470 | 25.27 | 281.3915104749541 |
+| not-applicable | 2678 | 0.8 | 257.9287306271862 |
+| a | 35994 | 10.77 | 204.53671171773578 |
+| unknown | 30888 | 9.24 | 243.73014937827895 |
+| c | 52821 | 15.8 | 180.8803075888559 |
+| e | 99283 | 29.7 | 388.5355126211989 |
 

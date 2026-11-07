@@ -65,7 +65,10 @@ def execute():
         WITH filtered_data AS (
             SELECT 
                 code,
+                product_name,
                 rayon,
+                labels_tags,
+                categories_tags,
                 pnns_groups_1,
                 pnns_groups_2,
                 "energy-kcal_100g",
@@ -105,7 +108,7 @@ def execute():
                 AND "energy-kcal_100g" > 0
         )
         SELECT 
-            code, rayon, "pnns_groups_1", "pnns_groups_2", "energy-kcal_100g", fat_100g, "saturated-fat_100g",
+            code, product_name, rayon, labels_tags, categories_tags, "pnns_groups_1", "pnns_groups_2", "energy-kcal_100g", fat_100g, "saturated-fat_100g",
             carbohydrates_100g, sugars_100g, proteins_100g, salt_100g, fiber_100g, "fruits-vegetables-legumes_100g",
             additives_n, nova_group, ratio_sugar_carbs, ratio_sat_fat, ratio_energy_fat,
             nutriscore_score, nutriscore_grade,

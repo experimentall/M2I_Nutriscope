@@ -44,6 +44,7 @@ FINAL_SELECTED_COLUMNS = [
     'product_name',
     'brands',
     'quantity',
+    'labels_tags',
     'categories_tags',
     'main_category',
     'pnns_groups_1',
@@ -81,16 +82,17 @@ CSV_SELECTED_CATEGORIES = [
     'Cereals and potatoes',
     'Milk and dairy products',
     'Beverages',
-    'Fat and sauces',
-    'Composite foods',
-    'Fruits and vegetables',
-    'Salty snacks'
+    # 'Fat and sauces',
+    # 'Composite foods',
+    # 'Fruits and vegetables',
+    # 'Salty snacks'
 ]
 TEXT_TYPE = [
     'code',
     'product_name',
     'brands',
     'quantity',
+    'labels_tags',
     'categories_tags',
     'main_category',
     'pnns_groups_1',
@@ -147,7 +149,7 @@ STRATEGIE_PAR_DEFAUT = {
     'quantity': 'drapeau', # NA, MNAR
     'categories_tags': 'drapeau', # regle metier (supprimer si main_category + categories_tags = NA), NA, MAR / MNAR
     'main_category': 'drapeau', # substitution par categories_tags
-    'labels_tags': 'supprimer_colonne',
+    'labels_tags': 'drapeau', # Ajouté pour tp16
     'stores': 'supprimer_colonne',
     'ingredients_text': 'drapeau', # NA, MAR
     'allergens': 'drapeau', # NA, MNAR

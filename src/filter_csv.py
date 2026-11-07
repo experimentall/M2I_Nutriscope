@@ -48,10 +48,10 @@ print(f'CSV fltré FR : {df_new_csv_fr.shape[0]} lignes, {df_new_csv_fr.shape[1]
 """
 Filtrer sur les rayon représentatifs
 """
-# df_new_csv_categories = df_new_csv_fr[df_new_csv_fr["pnns_groups_1"].isin(CSV_SELECTED_CATEGORIES)].copy()
-# print(f'CSV filtré catégories {CSV_SELECTED_CATEGORIES} : {df_new_csv_categories.shape[0]} lignes, {df_new_csv_categories.shape[1]} colonnes')
-# df_new_csv = df_new_csv_categories.copy()
-df_new_csv = df_new_csv_fr.copy()
+df_new_csv_categories = df_new_csv_fr[df_new_csv_fr["pnns_groups_1"].isin(CSV_SELECTED_CATEGORIES)].copy()
+print(f'CSV filtré catégories {CSV_SELECTED_CATEGORIES} : {df_new_csv_categories.shape[0]} lignes, {df_new_csv_categories.shape[1]} colonnes')
+df_new_csv = df_new_csv_categories.copy()
+# df_new_csv = df_new_csv_fr.copy()
 
 """
 Création du nouveau CSV filtré
