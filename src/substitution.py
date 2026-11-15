@@ -1,7 +1,57 @@
 import math
+from pathlib import Path
+import pandas as pd
+import numpy as np
 
 NUTRIENT_COLS = ["kcal", "lipides", "satures", "sucres", "sel", "fibres", "proteines"]
+RENOMMAGE = {
+    "code": "code", "product_name": "nom", "nutriscore_grade": "nutriscore",
+    "energy-kcal_100g": "kcal", "fat_100g": "lipides",
+    "saturated-fat_100g": "satures", "sugars_100g": "sucres",
+    "salt_100g": "sel", "fiber_100g": "fibres", "proteins_100g": "proteines",
+}
+ETIQUETTES_BIO = {"en:organic", "fr:ab-agriculture-biologique", "en:eu-organic"}
 
+def en_liste(valeur):
+    """Convertit une cellule d'étiquettes (liste, tableau ou texte « a,b ») en liste."""
+    if valeur is None or (isinstance(valeur, float) and np.isnan(valeur)):
+        return []
+    if isinstance(valeur, str):
+        return [t.strip() for t in valeur.split(",") if t.strip()]
+    return list(valeur)
+
+def preparation_donnee(source_parquet):
+    source = Path(source_parquet)
+    catalogue = pd.read_parquet(source).rename(columns=RENOMMAGE)
+
+    if "bio" not in catalogue.columns and "labels_tags" in catalogue.columns:
+        catalogue["bio"] = catalogue["labels_tags"].apply(
+            lambda v: bool(ETIQUETTES_BIO & set(en_liste(v))))
+    if "sous_categorie" not in catalogue.columns and "categories_tags" in catalogue.columns:
+        catalogue["sous_categorie"] = catalogue["categories_tags"].apply(
+            lambda v: (en_liste(v) or [None])[-1])
+
+    # Nutri-Score en majuscules ; toute valeur hors A-E devient « manquante »
+    catalogue["nutriscore"] = catalogue["nutriscore"].astype(str).str.strip().str.upper()
+    catalogue.loc[~catalogue["nutriscore"].isin(list("ABCDE")), "nutriscore"] = np.nan
+    catalogue["bio"] = catalogue["bio"].fillna(False).astype(bool)
+
+    # masque_impossible, filtrer le catalogue
+    masque_impossible = None
+    somme_nutriments = (
+        catalogue["lipides"].fillna(0)
+        + catalogue["sucres"].fillna(0)
+        + catalogue["proteines"].fillna(0)
+        + catalogue["fibres"].fillna(0)
+    )
+    condition_somme_trop_haute = somme_nutriments > 100
+    condition_kcal_trop_haute = catalogue["kcal"] > 900
+    masque_impossible = condition_somme_trop_haute | condition_kcal_trop_haute
+    catalogue = catalogue.loc[~masque_impossible].reset_index(drop=True)
+
+    return catalogue
+
+# La dispersion moyenne de chacun des nutriments
 def compute_scales(enregistrements):
     """
     Calcule l'écart-type de chaque nutriment sur l'ensemble des produits complets.
@@ -67,7 +117,6 @@ def filter_candidates(produit_scanne, enregistrements):
         candidats.append(p)
         
     return candidats
-
 
 def rank_candidates(produit_scanne, candidats, scales, prefer_bio=False):
     """
@@ -187,52 +236,3 @@ def suggest_substitutes(code_produit, enregistrements, k=3, max_distance=float("
         
     # On retourne uniquement les k premiers résultats après filtrage complet
     return suggestions_valides[:k]
-
-
-# def suggest_substitutes(code_produit, enregistrements, k=3, max_distance=float("inf"), scales=None):
-#     """
-#     Trouve le produit, filtre ses candidats, conserve uniquement ceux qui AMÉLIORENT 
-#     le Nutri-Score et respectent la distance maximale, puis retourne les k meilleurs.
-#     """
-#     # Trouver le produit scanné d'origine
-#     produit_scanne = next((p for p in enregistrements if p.get("code") == code_produit), None)
-#     if not produit_scanne:
-#         return []
-        
-#     # Vérification que le produit scanné possède ses nutriments
-#     for col in NUTRIENT_COLS:
-#         val = produit_scanne.get(col)
-#         if val is None or (isinstance(val, float) and math.isnan(val)):
-#             return []
-            
-#     if scales is None:
-#         scales = compute_scales(enregistrements)
-        
-#     # Extraire et classer l'ensemble des candidats valides
-#     candidats = filter_candidates(produit_scanne, enregistrements)
-#     candidats_classes = rank_candidates(produit_scanne, candidats, scales, prefer_bio=produit_scanne.get("bio", False))
-    
-#     mapping_nutri = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
-#     grade_ref = str(produit_scanne.get("nutriscore", "")).strip().upper()
-#     rang_reference = mapping_nutri.get(grade_ref, 99)
-    
-#     suggestions = []
-    
-#     # Application des filtres de garde finaux
-#     for c in candidats_classes:
-#         # Exclure si le Nutri-Score n'est pas STRICTEMENT meilleur
-#         grade_cand = str(c.get("nutriscore", "")).strip().upper()
-#         if mapping_nutri.get(grade_cand, 99) >= rang_reference:
-#             continue
-            
-#         # Exclure si le candidat dépasse la barrière de similarité maximale
-#         if c.get("distance", 0.0) > max_distance:
-#             continue
-            
-#         suggestions.append(c)
-        
-#         # Sortie anticipée dès que la cible de suggestions k est atteinte
-#         if len(suggestions) == k:
-#             break
-            
-#     return suggestions
