@@ -56,6 +56,17 @@ python -m src.export_features --input-dir ./data/parquet/produits --output-dir .
 python -m jupyter nbconvert --to notebook --execute --inplace notebooks/eda_reference.ipynb
 ```
 
+```bash
+python -m src.scanner
+python -m src.telecharger_images --liste
+python -m src.telecharger_images --rayons chocolats confitures charcuteries fromages yaourts eaux jus sodas
+python -m src.corpus.fiches --limite 1000
+python -m src.corpus.telecharger --inclure-a-verifier
+python -m src.rag.indexer
+python -m src.rag.assistant
+```
+
+
 **Tests**
 ```bash
 python -m pytest -q

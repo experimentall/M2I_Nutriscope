@@ -9,7 +9,7 @@ SEUIL_CONFIANCE = 35.0  # Justification : > 2x le hasard pur (16.67% pour 6 clas
 
 # Définition manuelle ou dynamique des classes dans le bon ordre alphabétique
 # (Assurez-vous que cet ordre correspond EXACTEMENT à vos dossiers d'origine)
-CLASS_NAMES = ['biscuits', 'cereales', 'chips', 'chocolats', 'pates', 'pizzas']
+CLASS_NAMES = ['charcuteries', 'chocolats', 'confitures', 'eaux',  'fromages', 'jus', 'sodas', 'yaourts']
 
 CURRENT_PATH = Path(__file__).resolve().parent
 # Chargement unique du modèle (pour éviter de le recharger à chaque appel d'API)

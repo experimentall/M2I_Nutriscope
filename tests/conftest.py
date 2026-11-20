@@ -15,6 +15,7 @@ def tordu() -> pd.DataFrame:
         "sugars_100g": [5.0, 5.0, 0.0, 0.0, 74000.0, 20.6],           # ligne 4 : 74 000 g -> impossible
         "proteins_100g": [3.0, 3.0, 0.0, 2.0, 1.0, 3.0],
         "salt_100g": [1.0, 1.0, 0.0, 0.5, 0.5, 1.0],
+        "sodium_100g": [0.4, 0.4, 50.0, 0.2, 0.2, 0.4], 
         "saturated-fat_100g": [1.0, 1.0, 1.0, 1.0, 1.0, 10.6],
         "fruits-vegetables-legumes_100g": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     })
@@ -74,10 +75,6 @@ def categories_tordu() -> pd.DataFrame:
         "categories_tags": ["en:beverages,en:juices", "en:snacks,en:biscuits", np.nan, np.nan],
         "main_category": ["en:juices", np.nan, np.nan, np.nan]
     })
-
-import numpy as np
-import pandas as pd
-import pytest
 
 @pytest.fixture
 def texte_tordu():

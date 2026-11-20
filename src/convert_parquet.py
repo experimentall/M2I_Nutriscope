@@ -8,7 +8,6 @@ import json
 
 load_dotenv()
 
-CSV_SOURCE = os.getenv('CSV_FILE_FILTERED')
 CSV_FILE_CLEAN = os.getenv('CSV_FILE_CLEAN')
 CURRENT_PATH = Path(__file__).resolve().parent
 

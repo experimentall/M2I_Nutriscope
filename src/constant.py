@@ -32,11 +32,7 @@ FLAG_COLUMNS = [
     'ingredients_text_manquant',
     'allergens_manquant',
     'additives_n_manquant',
-    'fat_100g_manquant',
-    'saturated_fat_100g_manquant',
     'carbohydrates_100g_manquant',
-    'fiber_100g_manquant',
-    'proteins_100g_manquant',
     'fruits_vegetables_legumes_100g_manquant'
 ]
 FINAL_SELECTED_COLUMNS = [
@@ -159,13 +155,13 @@ STRATEGIE_PAR_DEFAUT = {
     'serving_size': 'garder', # feature derivee, NA si illisible, MCAR-proche
     'energy-kcal_100g': 'mediane_rayon', # imputation metier, MAR
     'energy_100g': 'garder', # imputation metier
-    'fat_100g': 'drapeau', # NA, MNAR
-    'saturated-fat_100g': 'drapeau', # NA, MNAR
+    'fat_100g': 'mediane_rayon', # NA, MNAR
+    'saturated-fat_100g': 'mediane_rayon', # NA, MNAR
     'carbohydrates_100g': 'drapeau', # NA, MNAR
-    'sugars_100g': 'garder', # NA, MAR
-    'fiber_100g': 'drapeau', # NA, MNAR
-    'proteins_100g': 'drapeau', # NA, MNAR
-    'salt_100g': 'garder', # imputation metier (calcul), NA, MAR
+    'sugars_100g': 'mediane_rayon', # NA, MAR
+    'fiber_100g': 'mediane_rayon', # NA, MNAR
+    'proteins_100g': 'mediane_rayon', # NA, MNAR
+    'salt_100g': 'mediane_rayon', # imputation metier (calcul), NA, MAR
     'sodium_100g': 'garder', # imputation metier (calcul)
     'fruits-vegetables-legumes_100g': 'drapeau' # NA, MNAR
 }

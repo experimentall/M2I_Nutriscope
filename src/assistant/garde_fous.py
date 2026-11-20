@@ -6,7 +6,8 @@ MOTS_CLES_MEDICAUX = [
     "maladie", "pathologie", "traitement", "medicament", "ordonnance",
     "regime therapeutique", "allergie", "intolerance", "grossesse",
     "enceinte", "insuline", "glycemie", "tension arterielle", "medecin",
-    "symptome", "guerir", "soigner"
+    "symptome", "guerir", "soigner", "maigrir", "perte de poids",
+    "regime", "cardiovasculaire", "infarctus", "pediatre", "nourrisson", "bebe"
 ]
 
 
@@ -25,7 +26,7 @@ def verifier_requete_medicale(question: str) -> str | None:
     """
     q_norm = normaliser_texte(question)
     for mot in MOTS_CLES_MEDICAUX:
-        if re.search(rf"\b{re.escape(mot)}\b", q_norm):
+        if re.search(rf"\b{re.escape(mot)}s?\b", q_norm):
             return (
                 "Je suis un assistant dédié uniquement à l'information nutritionnelle sur les produits alimentaires. "
                 "Je ne peux pas donner de conseil médical ni me prononcer sur une pathologie ou un régime thérapeutique. "

@@ -116,8 +116,8 @@ def test_normaliser_textes(texte_tordu):
     assert df.loc[1, "brands"] == "Nestlé"
 
     # Ligne 0 : Grade en minuscule, ligne 2 reste unknown
-    assert df.loc[0, "nutriscore_grade"] == "a"
-    assert df.loc[2, "nutriscore_grade"] == "unknown"
+    assert df.loc[0, "nutriscore_grade"] == "A"
+    assert pd.isna(df.loc[2, "nutriscore_grade"])
 
     # Vérification des métriques du compte rendu
     assert cr.details["noms_vides_nettoyes"] == 1

@@ -64,9 +64,4 @@
 3. **Validateur d'arguments (`src/outils.py`)** : Traite toute demande du LLM comme une entrée non fiable. Vérifie que le nom de l'outil est autorisé, parse le JSON sans `eval()`, contrôle les types et les bornes (`1 <= limite <= 5`) et rejette tout argument inconnu en renvoyant `{"erreur": "..."}`.
 4. **Outil `chercher_produit` (`src/outils.py`)** : Interroge le catalogue réel (normalisation sans casse ni accents), applique la priorité du `code` sur le `nom`, gère les valeurs manquantes (`null` et jamais `0`) et signale les ambiguïtés.
 
-### À venir
-- **Outil `suggérer_alternative`** : Branchement du moteur de substitution du TP 16 pour proposer automatiquement des produits équivalents mieux notés.
-- **Brique RAG** : Ajout d'une recherche par embeddings sur des documents nutritionnels officiels (PNNS) pour enrichir les explications sans hallucination.
-- **API & Application** : Exposition de l'orchestrateur via FastAPI et interface utilisateur web.
-
 *Données produits issues d'Open Food Facts (licence ODbL).*

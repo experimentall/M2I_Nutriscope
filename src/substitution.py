@@ -5,12 +5,20 @@ import numpy as np
 
 NUTRIENT_COLS = ["kcal", "lipides", "satures", "sucres", "sel", "fibres", "proteines"]
 RENOMMAGE = {
-    "code": "code", "product_name": "nom", "nutriscore_grade": "nutriscore",
+    "code": "code", "product_name": "nom", "brands": "marque", "nutriscore_grade": "nutriscore",
     "energy-kcal_100g": "kcal", "fat_100g": "lipides",
     "saturated-fat_100g": "satures", "sugars_100g": "sucres",
     "salt_100g": "sel", "fiber_100g": "fibres", "proteins_100g": "proteines",
 }
+RAYONS_FR: dict[str, str] = {
+    "sugary-snacks": "Snacks sucrés",
+    "fish-meat-eggs": "Viandes, poissons et œufs",
+    "milk-and-dairy-products": "Produits laitiers",
+    "cereals-and-potatoes": "Céréales et féculents",
+    "beverages": "Boissons",
+}
 ETIQUETTES_BIO = {"en:organic", "fr:ab-agriculture-biologique", "en:eu-organic"}
+MAX_DISTANCE = 3.95  # Seuil optimal calibré au 90e percentile, élimine les candidats situés à plus de 3,95 écarts-types
 
 def en_liste(valeur):
     """Convertit une cellule d'étiquettes (liste, tableau ou texte « a,b ») en liste."""
@@ -30,11 +38,32 @@ def preparation_donnee(source_parquet):
     if "sous_categorie" not in catalogue.columns and "categories_tags" in catalogue.columns:
         catalogue["sous_categorie"] = catalogue["categories_tags"].apply(
             lambda v: (en_liste(v) or [None])[-1])
+        
+    if "rayon" in catalogue.columns:
+        catalogue["rayon"] = (
+            catalogue["rayon"]
+            .astype("string")
+            .str.strip()
+            .str.lower()
+            .replace(RAYONS_FR)
+        )
 
     # Nutri-Score en majuscules ; toute valeur hors A-E devient « manquante »
     catalogue["nutriscore"] = catalogue["nutriscore"].astype(str).str.strip().str.upper()
     catalogue.loc[~catalogue["nutriscore"].isin(list("ABCDE")), "nutriscore"] = np.nan
     catalogue["bio"] = catalogue["bio"].fillna(False).astype(bool)
+
+    # Remplacement des nutriments manquants par médiane par sous-catégorie, puis médiane globale en dernier recours
+    for col in NUTRIENT_COLS:
+        # Calcul de la médiane par sous-catégorie et alignement sur la structure du catalogue
+        mediane_sous_cat = catalogue.groupby("sous_categorie")[col].transform("median")
+        
+        # Remplacement des manquants par la médiane de la sous-catégorie
+        catalogue[col] = catalogue[col].fillna(mediane_sous_cat)
+        
+        # En dernier recours, imputation des sous-catégories vides par la médiane globale de la colonne
+        mediane_globale = catalogue[col].median()
+        catalogue[col] = catalogue[col].fillna(mediane_globale)
 
     # masque_impossible, filtrer le catalogue
     masque_impossible = None
@@ -52,6 +81,7 @@ def preparation_donnee(source_parquet):
     return catalogue
 
 # La dispersion moyenne de chacun des nutriments
+# Normaliser les nutriments pour calculer une distance équitable
 def compute_scales(enregistrements):
     """
     Calcule l'écart-type de chaque nutriment sur l'ensemble des produits complets.
@@ -84,7 +114,6 @@ def compute_scales(enregistrements):
         scales[col] = ecart_type if ecart_type > 0 else 1.0
         
     return scales
-
 
 def filter_candidates(produit_scanne, enregistrements):
     """
@@ -187,7 +216,7 @@ def filtrer_sucres(code, suggestions, enregistrements, tolerance=0.10):
             
     return suggestions_filtrees
 
-def suggest_substitutes(code_produit, enregistrements, k=3, max_distance=float("inf"), scales=None):
+def suggest_substitutes(code_produit, enregistrements, k=3, max_distance=MAX_DISTANCE, scales=None):
     """
     Trouve le produit, filtre ses candidats, conserve uniquement ceux qui AMÉLIORENT 
     le Nutri-Score et respectent la distance maximale, applique le filtre sur les sucres, 

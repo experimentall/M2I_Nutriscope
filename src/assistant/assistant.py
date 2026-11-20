@@ -2,20 +2,22 @@ import json
 import os
 import time
 from openai import OpenAI
-from src.garde_fous import verifier_requete_medicale
-from src.outils import CatalogueOutils
+from src.assistant.garde_fous import verifier_requete_medicale
+from src.assistant.outils import CatalogueOutils
 from dotenv import load_dotenv
 load_dotenv()
 
-SCHEMA_CHERCHER_PRODUIT = [
+TEMPERATURE = 0
+MAX_TOKENS = 1000 # environ 750 mots
+
+SCHEMA_OUTILS = [
     {
         "type": "function",
         "function": {
             "name": "chercher_produit",
             "description": (
                 "Recherche un ou plusieurs produits alimentaires dans le catalogue NutriScope "
-                "par code-barres exact ou par nom. Renvoie le Nutri-Score, les valeurs nutritionnelles pour 100 g "
-                "et, si demandé, les alternatives plus saines du même rayon."
+                "par code-barres exact ou par nom. Renvoie le Nutri-Score et les valeurs nutritionnelles pour 100 g."
             ),
             "parameters": {
                 "type": "object",
@@ -31,27 +33,63 @@ SCHEMA_CHERCHER_PRODUIT = [
                     "limite": {
                         "type": "integer",
                         "description": "Nombre maximal de fiches à renvoyer (entier entre 1 et 5, défaut 3)."
-                    },
-                    "avec_alternatives": {
-                        "type": "boolean",
-                        "description": "Mettre à true si l'utilisateur demande une alternative ou un produit plus sain."
                     }
                 },
                 "required": []
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "suggest_substitutes",
+            "description": (
+                "Recherche des alternatives plus saines du même rayon à partir du code-barres exact d'un produit. "
+                "À appeler UNIQUEMENT si l'utilisateur demande explicitement une alternative ou un produit plus sain, "
+                "après avoir identifié le code-barres du produit initial avec 'chercher_produit'."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "Code-barres exact du produit de référence."
+                    },
+                    "k": {
+                        "type": "integer",
+                        "description": "Nombre maximal d'alternatives à renvoyer (entier entre 1 et 5, défaut 3)."
+                    }
+                },
+                "required": ["code"]
+            }
+        }
     }
 ]
 
-PROMPT_SYSTEME = """Tu es NutriScope, l'assistant nutritionnel d'un catalogue de produits alimentaires (données Open Food Facts).
+PROMPT_SYSTEME = """Tu es NutriScope, un assistant strictement limité au catalogue alimentaire Open Food Facts.
 
-RÈGLES STRICTES :
-1. PÉRIMÈTRE : Réponds uniquement aux questions sur les produits alimentaires (Nutri-Score, valeurs nutritionnelles, comparaison, explication d'un score, recommandation d'alternative plus saine dans le catalogue).
-2. REFUS : Refuse poliment toute question médicale (maladie, diabète, allergie, régime thérapeutique) en renvoyant vers un professionnel de santé. Refuse toute question hors alimentation.
-3. ZÉRO INVENTION : Appelle OBLIGATOIREMENT l'outil `chercher_produit` avant de citer le moindre chiffre ou Nutri-Score. Ne invente JAMAIS une valeur. Si une valeur vaut `null` (`donnees_incompletes: true`), dis explicitement qu'elle est manquante dans le catalogue. Si un produit est `introuvable`, dis-le sans inventer.
-4. AMBIGUÏTÉ : Si l'outil renvoie `statut: "ambigu"`, présente les produits trouvés et demande à l'utilisateur de préciser lequel il souhaite.
-5. EXPLICATION & RECOMMANDATION : Pour expliquer un Nutri-Score, appuie-toi uniquement sur les nutriments de la fiche (sucres, acides gras saturés, sel, kcal élevés vs fibres, protéines). Pour recommander une alternative plus saine, appelle `chercher_produit` avec `avec_alternatives=true` et présente uniquement les produits listés dans `alternatives_saines` (s'il n'y en a aucun, indique qu'aucune alternative mieux notée n'est disponible dans ce rayon du catalogue).
-Réponds en français, de manière claire, structurée et concise."""
+SUIS CET ALGORITHME DANS L'ORDRE À CHAQUE QUESTION :
+
+ÉTAPE 1 : FILTRAGE DU PÉRIMÈTRE
+- SI la question porte sur la santé, une maladie (diabète, cholestérol...), une allergie ou un régime médical : REFUSE et renvoie vers un professionnel de santé.
+- SI la question ne concerne pas un produit alimentaire du catalogue : REFUSE poliment.
+
+ÉTAPE 2 : APPEL D'OUTIL OBLIGATOIRE
+- Tu n'as AUCUNE connaissance propre. Appelle TOUJOURS `chercher_produit` avant de répondre (un appel par produit en cas de comparaison).
+
+ÉTAPE 3 : ANALYSE DU RÉSULTAT JSON DE L'OUTIL
+- SI `statut == "introuvable"` : dis uniquement que le produit est absent du catalogue. N'invente rien.
+- SI `statut == "ambigu"` : STOP. Ne donne AUCUNE valeur nutritionnelle, AUCUN Nutri-Score et AUCUNE explication. Liste uniquement les noms et codes-barres des produits trouvés et demande à l'utilisateur de choisir.
+- SI `statut == "ok"` :
+  * Désigne toujours les produits par leur nom exact tel qu'il apparaît dans le JSON.
+  * Pour CHAQUE produit présenté, commence OBLIGATOIREMENT par cette ligne exacte AVANT la liste des nutriments :
+    **NOM DU PRODUIT** (code-barres : CODE) — Nutri-Score : SCORE
+  * Affiche OBLIGATOIREMENT l'intégralité des 7 nutriments pour 100 g présents dans le JSON (kcal, lipides, acides gras saturés, sucres, sel, fibres, protéines) sous forme de liste à puces, même si la question ne porte que sur certains nutriments. Si une valeur est `null` (`incomplet: true`), écris "donnée manquante". N'invente aucun chiffre.
+  * Pour expliquer le Nutri-Score, cite uniquement les nutriments de la fiche (sucres, acides gras saturés, sel, kcal élevés vs fibres, protéines), sans conseil médical.
+  * SI la question est une comparaison entre plusieurs produits : conclus en 2 phrases courtes et simples maximum. Compare directement les valeurs demandées et le Nutri-Score en vérifiant le sens de comparaison (un chiffre plus grand signifie "plus", un chiffre plus petit signifie "moins").
+  * SI l'utilisateur a demandé une alternative : cite UNIQUEMENT la liste `alternatives_saines` du JSON. Pour chaque alternative, affiche son Nutri-Score et ses valeurs, puis cite UNIQUEMENT les critères où elle est réellement meilleure que le produit initial (meilleur Nutri-Score, ou valeur strictement inférieure en sucres, saturés ou kcal). Ne dis jamais qu'une valeur est inférieure si le chiffre est plus élevé. Si la liste est vide, écris "Aucune alternative plus saine n'est disponible dans ce rayon". N'affiche pas d'alternatives si l'utilisateur n'en a pas demandé.
+
+FORMAT : Réponds en français, de manière brève et factuelle."""
 
 
 class AssistantNutriScope:
@@ -99,7 +137,7 @@ class AssistantNutriScope:
         for _ in range(self.max_tours):
             # probabilité la plus élevée
             # évite les réponses trop longues / boucle / budget
-            options = {"temperature": 0, "max_tokens": 500}
+            options = {"temperature": TEMPERATURE, "max_tokens": MAX_TOKENS}
             if self.effort:
                 # Mode direct / reduction latence
                 options["reasoning_effort"] = self.effort
@@ -107,7 +145,7 @@ class AssistantNutriScope:
             rep = self.client.chat.completions.create(
                 model=self.model,
                 messages=self.historique,
-                tools=SCHEMA_CHERCHER_PRODUIT,
+                tools=SCHEMA_OUTILS,
                 **options
             )
 

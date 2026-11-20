@@ -14,6 +14,8 @@ import subprocess
 import duckdb
 from src.constant import STRATEGIE_PAR_DEFAUT
 
+SEED = 42
+TEST_RATIO = 0.20
 
 def get_git_commit():
     """Récupère le hash du commit Git actuel."""
@@ -37,8 +39,6 @@ def execute():
     parser.add_argument("--force", action="store_true", help="Forcer l'écrasement si le fichier existe déjà")
     args = parser.parse_args()
 
-    SEED = 42
-    TEST_RATIO = 0.20
     today_str = datetime.datetime.now().strftime("%Y%m%d")
     
     parquet_filename = f"features_nutriscore_{today_str}.parquet"
@@ -67,6 +67,7 @@ def execute():
                 code,
                 product_name,
                 rayon,
+                brands,
                 labels_tags,
                 categories_tags,
                 pnns_groups_1,
@@ -86,16 +87,16 @@ def execute():
                 COALESCE("saturated-fat_100g" / NULLIF(fat_100g, 0), 0.0) AS ratio_sat_fat,
                 COALESCE((fat_100g * 9.0) / NULLIF("energy-kcal_100g", 0), 0.0) AS ratio_energy_fat,
                 nutriscore_score,
-                lower(nutriscore_grade) AS nutriscore_grade,
+                nutriscore_grade,
                 -- Stratification déterministe par hachage de la clé unique 'code'
                 ROW_NUMBER() OVER (
-                    PARTITION BY lower(nutriscore_grade) 
+                    PARTITION BY nutriscore_grade
                     ORDER BY hash(code || '{SEED}')
                 ) AS row_num,
-                COUNT(*) OVER (PARTITION BY lower(nutriscore_grade)) AS group_count
+                COUNT(*) OVER (PARTITION BY nutriscore_grade) AS group_count
             FROM read_parquet('{input_pattern}', hive_partitioning=True)
             WHERE 
-                lower(nutriscore_grade) IN ('a', 'b', 'c', 'd', 'e')
+                nutriscore_grade IN ('A', 'B', 'C', 'D', 'E')
                 AND "energy-kcal_100g" IS NOT NULL
                 AND fat_100g IS NOT NULL
                 AND "saturated-fat_100g" IS NOT NULL
@@ -108,7 +109,7 @@ def execute():
                 AND "energy-kcal_100g" > 0
         )
         SELECT 
-            code, product_name, rayon, labels_tags, categories_tags, "pnns_groups_1", "pnns_groups_2", "energy-kcal_100g", fat_100g, "saturated-fat_100g",
+            code, product_name, rayon, brands, labels_tags, categories_tags, "pnns_groups_1", "pnns_groups_2", "energy-kcal_100g", fat_100g, "saturated-fat_100g",
             carbohydrates_100g, sugars_100g, proteins_100g, salt_100g, fiber_100g, "fruits-vegetables-legumes_100g",
             additives_n, nova_group, ratio_sugar_carbs, ratio_sat_fat, ratio_energy_fat,
             nutriscore_score, nutriscore_grade,
@@ -177,7 +178,7 @@ def execute():
             "strict_rules_of_engagement": "1. FIT (entraînement, imputations, encodages) sur le groupe 'train' UNIQUEMENT. 2. La validation croisée (tuning hyperparamètres) s'effectue exclusivement à l'intérieur du bloc 'train'. 3. Le bloc 'test' ne doit être lu et prédit qu'UNE SEULE FOIS, tout à la fin, pour sortir les métriques finales."
         },
         "applied_filters": [
-            "nutriscore_grade IN (a,b,c,d,e)",
+            "nutriscore_grade IN (A,B,C,D,E)",
             "7 nutriments requis non nuls",
             "Coherences: sucres <= glucides, sat <= lipides, energie > 0"
         ],

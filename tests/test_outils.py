@@ -2,7 +2,7 @@ import json
 import pandas as pd
 import pytest
 from unittest.mock import patch
-from src.outils import formater_fiche, CatalogueOutils
+from src.assistant.outils import formater_fiche, CatalogueOutils
 
 
 class TestFormaterFiche:
@@ -65,8 +65,8 @@ def catalogue_mock():
         }
     ])
 
-    with patch("src.outils.preparation_donnee", return_value=df_fictif), \
-         patch("src.outils.compute_scales", return_value={}):
+    with patch("src.assistant.outils.preparation_donnee", return_value=df_fictif), \
+         patch("src.assistant.outils.compute_scales", return_value={}):
         yield CatalogueOutils()
 
 
@@ -94,14 +94,6 @@ class TestCatalogueOutils:
         assert res["statut"] == "ok"
         assert res["produits"][0]["code"] == "333"
 
-    def test_avec_alternatives(self, catalogue_mock):
-        alts_fictives = [{"code": "222", "nom": "Biscuit Avoine", "nutriscore": "B", "sucres": 15, "satures": 2, "kcal": 410}]
-        with patch("src.outils.suggest_substitutes", return_value=alts_fictives) as mock_sub:
-            res = catalogue_mock.chercher_produit(code="111", avec_alternatives=True)
-            mock_sub.assert_called_once()
-            assert "alternatives_saines" in res["produits"][0]
-            assert res["produits"][0]["alternatives_saines"][0]["code"] == "222"
-
 
 class TestValidationAppelBrut:
     def test_outil_non_autorise(self, catalogue_mock):
@@ -118,7 +110,6 @@ class TestValidationAppelBrut:
         {"nom": 12345},  # Mauvais type pour nom
         {"nom": "lait", "limite": 10},  # Limite hors bornes [1, 5]
         {"nom": "lait", "limite": True},  # Booléen passé à la place d'un int
-        {"nom": "lait", "avec_alternatives": "oui"},  # Mauvais type booléen
     ])
     def test_arguments_invalides(self, catalogue_mock, payload):
         res = catalogue_mock.executer_appel_brut("chercher_produit", json.dumps(payload))
